@@ -1,22 +1,33 @@
 import * as core from '@actions/core'
-import { wait } from './wait'
+//import * as github from '@actions/github'
+import { initializeOTEL } from './otel'
 
 /**
  * The main function for the action.
- * @returns {Promise<void>} Resolves when the action is complete.
+ * @returns { Promise<void>} Resolves when the action is complete.
  */
 export async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
+    const otlpEndpoint: string = core.getInput('otlpEndpoint')
+    const otlpHeaders = core.getInput('otlpHeaders')
+    const otelServiceName =
+      core.getInput('otelServiceName') || process.env.OTEL_SERVICE_NAME || ''
 
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    core.debug(`Waiting ${ms} milliseconds ...`)
+    const otelServiceVersion =
+      core.getInput('otelServiceVersion') ||
+      process.env.OTEL_SERVICE_VERSION ||
+      ''
 
-    // Log the current timestamp, wait, then log the new timestamp
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    core.debug(`Using OTLP endpoint: ${otlpEndpoint}`)
+    core.debug(`Using OTLP headers: ${otlpHeaders}`)
+    core.debug(`Using OTLP service name: ${otelServiceName}`)
 
+    //const octokit = github.getOctokit(ghToken)
+
+    initializeOTEL({
+      serviceName: otelServiceName,
+      serviceVersion: otelServiceVersion
+    })
     // Set outputs for other workflow steps to use
     core.setOutput('time', new Date().toTimeString())
   } catch (error) {
