@@ -1,6 +1,6 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'OTLP Vulnerabilities Exporter'
+description: 'Export vulnerability metrics over OTLP'
+author: 'Jinius DevOps'
 
 # Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
@@ -9,15 +9,22 @@ branding:
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: 'Your input description here'
+  otlpEndpoint:
+    description: The destination endpoint to export OpenTelemetry traces to
     required: true
-    default: '1000'
-
-# Define your outputs here.
-outputs:
-  time:
-    description: 'Your output description here'
+  otlpHeaders:
+    description:
+      Network Headers for the destination endpoint to export OpenTelemetry
+      traces to
+    required: true
+  otlpServiceName:
+    description: The resource.service attribute
+    default: trivy-ci-action
+    required: false
+  otlpServiceVersion:
+    description: The resource.version attribute
+    default: 1.0.0
+    required: false
 
 runs:
   using: node20
