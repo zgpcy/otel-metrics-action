@@ -5580,7 +5580,7 @@ async function lazyllhttp () {
 
   return await WebAssembly.instantiate(mod, {
     env: {
-      /* eslint-disable camelcase */
+       
 
       wasm_on_url: (p, at, len) => {
         /* istanbul ignore next */
@@ -5619,7 +5619,7 @@ async function lazyllhttp () {
         return currentParser.onMessageComplete() || 0
       }
 
-      /* eslint-enable camelcase */
+       
     }
   })
 }
@@ -5749,7 +5749,7 @@ class Parser {
         currentBufferRef = data
         currentParser = this
         ret = llhttp.llhttp_execute(this.ptr, currentBufferPtr, data.length)
-        /* eslint-disable-next-line no-useless-catch */
+         
       } catch (err) {
         /* istanbul ignore next: difficult to make a test case for */
         throw err
@@ -10931,11 +10931,11 @@ const encoder = new TextEncoder()
  * @see https://mimesniff.spec.whatwg.org/#http-token-code-point
  */
 const HTTP_TOKEN_CODEPOINTS = /^[!#$%&'*+-.^_|~A-Za-z0-9]+$/
-const HTTP_WHITESPACE_REGEX = /(\u000A|\u000D|\u0009|\u0020)/ // eslint-disable-line
+const HTTP_WHITESPACE_REGEX = /(\u000A|\u000D|\u0009|\u0020)/  
 /**
  * @see https://mimesniff.spec.whatwg.org/#http-quoted-string-token-code-point
  */
-const HTTP_QUOTED_STRING_TOKENS = /[\u0009|\u0020-\u007E|\u0080-\u00FF]/ // eslint-disable-line
+const HTTP_QUOTED_STRING_TOKENS = /[\u0009|\u0020-\u007E|\u0080-\u00FF]/  
 
 // https://fetch.spec.whatwg.org/#data-url-processor
 /** @param {URL} dataURL */
@@ -11327,7 +11327,7 @@ function parseMIMEType (input) {
 /** @param {string} data */
 function forgivingBase64 (data) {
   // 1. Remove all ASCII whitespace from data.
-  data = data.replace(/[\u0009\u000A\u000C\u000D\u0020]/g, '')  // eslint-disable-line
+  data = data.replace(/[\u0009\u000A\u000C\u000D\u0020]/g, '')   
 
   // 2. If data’s code point length divides by 4 leaving
   // no remainder, then:
@@ -11596,14 +11596,14 @@ class File extends Blob {
     let t = options.type
     let d
 
-    // eslint-disable-next-line no-labels
+     
     substep: {
       if (t) {
         t = parseMIMEType(t)
 
         if (t === 'failure') {
           t = ''
-          // eslint-disable-next-line no-labels
+           
           break substep
         }
 
@@ -14446,7 +14446,7 @@ async function httpNetworkFetch (
 
   // 7. Let newConnection be "yes" if forceNewConnection is true; otherwise
   // "no".
-  const newConnection = forceNewConnection ? 'yes' : 'no' // eslint-disable-line no-unused-vars
+  const newConnection = forceNewConnection ? 'yes' : 'no'  
 
   // 8. Switch on request’s mode:
   if (request.mode === 'websocket') {
@@ -16962,14 +16962,14 @@ function determineRequestsReferrer (request) {
       // 3. Return referrerOrigin.
       return referrerOrigin
     }
-    case 'strict-origin': // eslint-disable-line
+    case 'strict-origin':  
       /**
          * 1. If referrerURL is a potentially trustworthy URL and
          * request’s current URL is not a potentially trustworthy URL,
          * then return no referrer.
          * 2. Return referrerOrigin
         */
-    case 'no-referrer-when-downgrade': // eslint-disable-line
+    case 'no-referrer-when-downgrade':  
       /**
        * 1. If referrerURL is a potentially trustworthy URL and
        * request’s current URL is not a potentially trustworthy URL,
@@ -16977,7 +16977,7 @@ function determineRequestsReferrer (request) {
        * 2. Return referrerOrigin
       */
 
-    default: // eslint-disable-line
+    default:  
       return isNonPotentiallyTrustWorthy ? 'no-referrer' : referrerOrigin
   }
 }
@@ -23468,7 +23468,7 @@ function fireEvent (e, target, eventConstructor = Event, eventInitDict) {
   // 2. Let event be the result of creating an event given eventConstructor,
   //    in the relevant realm of target.
   // 3. Initialize event’s type attribute to e.
-  const event = new eventConstructor(e, eventInitDict) // eslint-disable-line new-cap
+  const event = new eventConstructor(e, eventInitDict)  
 
   // 4. Initialize any other IDL attributes of event as described in the
   //    invocation of this algorithm.
@@ -24790,7 +24790,7 @@ function _default(name, version, hashfunc) {
 
 
   try {
-    generateUUID.name = name; // eslint-disable-next-line no-empty
+    generateUUID.name = name;  
   } catch (err) {} // For CommonJS default export support
 
 
@@ -25461,7 +25461,7 @@ const StreamSearch = __nccwpck_require__(1142)
 
 const B_DCRLF = Buffer.from('\r\n\r\n')
 const RE_CRLF = /\r\n/g
-const RE_HDR = /^([^:]+):[ \t]?([\x00-\xFF]+)?$/ // eslint-disable-line no-control-regex
+const RE_HDR = /^([^:]+):[ \t]?([\x00-\xFF]+)?$/  
 
 function HeaderParser (cfg) {
   EventEmitter.call(this)
@@ -25523,7 +25523,7 @@ HeaderParser.prototype._parseHeader = function () {
   const len = lines.length
   let m, h
 
-  for (var i = 0; i < len; ++i) { // eslint-disable-line no-var
+  for (var i = 0; i < len; ++i) {  
     if (lines[i].length === 0) { continue }
     if (lines[i][0] === '\t' || lines[i][0] === ' ') {
       // folded header content
@@ -25643,7 +25643,7 @@ function SBMH (needle) {
 
   // Populate occurrence table with analysis of the needle,
   // ignoring last letter.
-  for (var i = 0; i < needleLength - 1; ++i) { // eslint-disable-line no-var
+  for (var i = 0; i < needleLength - 1; ++i) {  
     this._occ[needle[i]] = needleLength - 1 - i
   }
 }
@@ -25801,7 +25801,7 @@ SBMH.prototype._sbmh_lookup_char = function (data, pos) {
 }
 
 SBMH.prototype._sbmh_memcmp = function (data, pos, len) {
-  for (var i = 0; i < len; ++i) { // eslint-disable-line no-var
+  for (var i = 0; i < len; ++i) {  
     if (this._sbmh_lookup_char(data, pos + i) !== this._needle[i]) { return false }
   }
   return true
@@ -26242,7 +26242,7 @@ function UrlEncoded (boy, cfg) {
   this.fieldsLimit = getLimit(limits, 'fields', Infinity)
 
   let charset
-  for (var i = 0, len = parsedConType.length; i < len; ++i) { // eslint-disable-line no-var
+  for (var i = 0, len = parsedConType.length; i < len; ++i) {  
     if (Array.isArray(parsedConType[i]) &&
         RE_CHARSET.test(parsedConType[i][0])) {
       charset = parsedConType[i][1].toLowerCase()
@@ -26487,7 +26487,7 @@ module.exports = Decoder
 
 module.exports = function basename (path) {
   if (typeof path !== 'string') { return '' }
-  for (var i = path.length - 1; i >= 0; --i) { // eslint-disable-line no-var
+  for (var i = path.length - 1; i >= 0; --i) {  
     switch (path.charCodeAt(i)) {
       case 0x2F: // '/'
       case 0x5C: // '\'
@@ -26651,7 +26651,7 @@ module.exports = function getLimit (limits, name, defaultLimit) {
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 "use strict";
-/* eslint-disable object-property-newline */
+ 
 
 
 const decodeText = __nccwpck_require__(4619)
@@ -26777,7 +26777,7 @@ function parseParams (str) {
   let tmp = ''
   const len = str.length
 
-  for (var i = 0; i < len; ++i) { // eslint-disable-line no-var
+  for (var i = 0; i < len; ++i) {  
     const char = str[i]
     if (char === '\\' && inquote) {
       if (escaping) { escaping = false } else {

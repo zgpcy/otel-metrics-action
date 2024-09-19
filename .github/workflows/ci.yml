@@ -53,11 +53,17 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
 
+      - run: |
+          echo "[]" > otel-metrics.json
+
       - name: Test Local Action
-        id: test-action
         uses: ./
         with:
-          milliseconds: 2000
+          endpoint: https://observability.hades.platform.cy
+          metricNamespace: cve
+          serviceNameAttr: ci-action-trivy
+          serviceVersionAttr: 1.0.0
+          metricsFile: otel-metrics.json
 
       - name: Print Output
         id: output

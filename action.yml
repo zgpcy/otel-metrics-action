@@ -9,22 +9,28 @@ branding:
 
 # Define your inputs here.
 inputs:
-  otlpEndpoint:
+  endpoint:
     description: The destination endpoint to export OpenTelemetry traces to
     required: true
-  otlpHeaders:
+  headers:
     description:
       Network Headers for the destination endpoint to export OpenTelemetry
       traces to
+    required: false
+  metricNamespace:
+    description: The prefix to use for produced metrics
     required: true
-  otlpServiceName:
+  serviceNameAttr:
     description: The resource.service attribute
     default: trivy-ci-action
     required: false
-  otlpServiceVersion:
+  serviceVersionAttr:
     description: The resource.version attribute
     default: 1.0.0
     required: false
+  metricsFile:
+    description: The path to load otel metrics
+    required: true
 
 runs:
   using: node20
