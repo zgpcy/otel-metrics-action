@@ -42,7 +42,12 @@ export async function run(): Promise<void> {
 
   // Set outputs for other workflow steps to use
   //core.setOutput('time', new Date().toTimeString())
-  await sendMetrics(metrics)
+  try {
+    await sendMetrics(metrics)
+  } catch (error: any) {
+    core.setFailed(`Failed to send metrics: ${error.message}`)
+    throw error
+  }
 }
 
 // Function to load metrics from a file

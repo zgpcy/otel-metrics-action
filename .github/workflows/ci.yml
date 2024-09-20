@@ -66,3 +66,4 @@ jobs:
           serviceNameAttr: ci-action-trivy
           serviceVersionAttr: 1.0.0
           metricsFile: otel-metrics.json
+          milliseconds: 1000
