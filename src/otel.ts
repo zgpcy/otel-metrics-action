@@ -60,7 +60,7 @@ export const sendMetrics = async (metrics: OtlpMetric[]): Promise<void> => {
       description: data.description,
       unit: '1'
     })
-    m.add(data.value, data.labels)
+    m.bind(data.labels).set(data.value)
   })
   await meterProvider.forceFlush()
 }
