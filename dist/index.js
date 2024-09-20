@@ -59462,7 +59462,13 @@ async function run() {
     const metrics = loadMetricsFromFile(metricsFile);
     // Set outputs for other workflow steps to use
     //core.setOutput('time', new Date().toTimeString())
-    await (0, otel_1.sendMetrics)(metrics);
+    try {
+        await (0, otel_1.sendMetrics)(metrics);
+    }
+    catch (error) {
+        core.setFailed(`Failed to send metrics: ${error.message}`);
+        throw error;
+    }
 }
 // Function to load metrics from a file
 const loadMetricsFromFile = (filePath) => {
@@ -59546,7 +59552,7 @@ const sendMetrics = async (metrics) => {
             description: data.description,
             unit: '1'
         });
-        m.add(data.value, data.labels);
+        m.bind(data.labels).set(data.value);
     });
     await meterProvider.forceFlush();
 };
