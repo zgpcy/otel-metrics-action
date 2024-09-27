@@ -1,6 +1,6 @@
 name: 'OTLP Vulnerabilities Exporter'
 description: 'Export vulnerability metrics over OTLP'
-author: 'Jinius DevOps'
+author: 'zgpcy'
 
 # Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
