@@ -1,26 +1,50 @@
 import * as core from '@actions/core'
-import { wait } from './wait'
+import * as fs from 'fs'
+import * as path from 'path'
+//import * as github from '@actions/github'
+import { initializeOTLP, OtlpMetric, sendMetrics } from './otlp'
+import { parseMetrics } from './trivy'
 
-/**
- * The main function for the action.
- * @returns {Promise<void>} Resolves when the action is complete.
- */
-export async function run(): Promise<void> {
+export const run = async () => {
+  const endpoint: string = core.getInput('endpoint')
+  const headers: string = core.getInput('headers')
+  const metricNamespace: string =
+    core.getInput('metricNamespace') || process.env.OTLP_METRIC_NAMESPACE || ''
+  const repositoryName: string =
+    core.getInput('repositoryName') || process.env.OTLP_REPOSITORY || ''
+  const otlpServiceNameAttr =
+    core.getInput('serviceNameAttr') || process.env.OTLP_SERVICE_NAME_ATTR || ''
+  const otlpServiceVersionAttr =
+    core.getInput('serviceVersionAttr') ||
+    process.env.OTLP_SERVICE_VERSION_ATTR ||
+    ''
+  const trivyOutputFile: string = core.getInput('trivyOutputFile')
+
+  core.debug(`Using OTLP endpoint: ${endpoint}`)
+  core.debug(`Using OTLP headers: ${headers}`)
+  core.debug(`Using OTLP namespace: ${metricNamespace}`)
+  core.debug(`Using OTLP service name: ${otlpServiceNameAttr}`)
+  core.debug(`Using OTLP service version: ${otlpServiceNameAttr}`)
+
+  //const octokit = github.getOctokit(ghToken)
+
+  initializeOTLP({
+    endpoint: endpoint,
+    headers: headers,
+    metricNamespace: metricNamespace,
+    serviceName: otlpServiceNameAttr,
+    serviceVersion: otlpServiceVersionAttr
+  })
+
+  // Load metrics from the file
+
   try {
-    const ms: string = core.getInput('milliseconds')
-
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    core.debug(`Waiting ${ms} milliseconds ...`)
-
-    // Log the current timestamp, wait, then log the new timestamp
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
-
-    // Set outputs for other workflow steps to use
-    core.setOutput('time', new Date().toTimeString())
-  } catch (error) {
-    // Fail the workflow run if an error occurs
-    if (error instanceof Error) core.setFailed(error.message)
+    const metrics = parseMetrics(trivyOutputFile, repositoryName)
+    core.info('Metrics to be sent:' + metrics)
+    await sendMetrics(metrics)
+    core.info('Metrics sent successfully')
+  } catch (error: any) {
+    core.setFailed(`Failed to send metrics: ${error.message}`)
+    throw error
   }
 }

@@ -3,14 +3,16 @@ name: Continuous Integration
 on:
   pull_request:
     branches:
-      - main
+      - master
   push:
     branches:
-      - main
+      - master
 
 permissions:
   contents: read
 
+env:
+  ACTIONS_STEP_DEBUG: true
 jobs:
   test-typescript:
     name: TypeScript Tests
@@ -53,12 +55,18 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
 
+      - run: |
+          echo "{}" > otel-metrics.json
+
       - name: Test Local Action
-        id: test-action
         uses: ./
         with:
-          milliseconds: 2000
-
-      - name: Print Output
-        id: output
-        run: echo "${{ steps.test-action.outputs.time }}"
+          endpoint: ${{secrets.OTEL_TESTING_ENDPOINT}}
+          headers: |
+            x-custom-header-1: "test1"
+            x-custom-header-2: "test2"
+          metricNamespace: cve
+          repositoryName: ${{env.GITHUB_REPOSITORY}}
+          serviceNameAttr: ci-action-trivy
+          serviceVersionAttr: 1.0.0
+          trivyOutputFile: otel-metrics.json
