@@ -31,7 +31,7 @@ steps:
         x-custom-header-1: "test1"
         x-auth-token: "***********"
       metricNamespace: cve
-      repositoryName: ${{env.GITHUB_REPOSITORY}}
+      githubRepository: ${{env.GITHUB_REPOSITORY}} # not required, extracted from env
       serviceNameAttr: ci-action-trivy
       serviceVersionAttr: 1.0.0
       trivyOutputFile: trivy-output.json

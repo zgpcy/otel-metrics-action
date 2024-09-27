@@ -13,7 +13,8 @@ interface Vulnerability {
 }
 export const parseMetrics = (
   filePath: string,
-  repository: string
+  owner: string,
+  repository: string,
 ): OtlpMetric[] => {
   const otlpMetrics: OtlpMetric[] = []
 
@@ -50,6 +51,7 @@ export const parseMetrics = (
       unit: 'vulnerability',
       labels: {
         severity: extract.Severity || '',
+        owner: owner,
         repository: repository,
         id: extract.VulnerabilityID || '',
         package: extract.PkgName || '',

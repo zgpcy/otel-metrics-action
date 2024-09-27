@@ -10,8 +10,8 @@ export const run = async () => {
   const headers: string = core.getInput('headers')
   const metricNamespace: string =
     core.getInput('metricNamespace') || process.env.OTLP_METRIC_NAMESPACE || ''
-  const repositoryName: string =
-    core.getInput('repositoryName') || process.env.OTLP_REPOSITORY || ''
+  const githubRepository: string =
+    core.getInput('githubRepository') || process.env.GITHUB_REPOSITORY || ''
   const otlpServiceNameAttr =
     core.getInput('serviceNameAttr') || process.env.OTLP_SERVICE_NAME_ATTR || ''
   const otlpServiceVersionAttr =
@@ -25,7 +25,20 @@ export const run = async () => {
   core.debug(`Using OTLP namespace: ${metricNamespace}`)
   core.debug(`Using OTLP service name: ${otlpServiceNameAttr}`)
   core.debug(`Using OTLP service version: ${otlpServiceNameAttr}`)
+  core.debug(`Using trivy output file: ${trivyOutputFile}`)
+  core.debug(`Using repository name: ${githubRepository}`)
 
+  let repositoryOwner, repositoryName = ''
+  if (githubRepository.includes('/')) {
+    const split = githubRepository.split('/')
+    if (split.length !== 2) {
+      throw new Error('Invalid repository format')
+    }
+    repositoryOwner = split[0]
+    repositoryName = split[1]
+  } else {
+    throw new Error('Repository owner is missing')
+  }
   //const octokit = github.getOctokit(ghToken)
 
   initializeOTLP({
@@ -39,7 +52,7 @@ export const run = async () => {
   // Load metrics from the file
 
   try {
-    const metrics = parseMetrics(trivyOutputFile, repositoryName)
+    const metrics = parseMetrics(trivyOutputFile, repositoryOwner, repositoryName)
     core.info('Metrics to be sent:' + metrics)
     await sendMetrics(metrics)
     core.info('Metrics sent successfully')
