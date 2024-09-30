@@ -11,14 +11,15 @@ interface Vulnerability {
   FixedVersion?: string
   PrimaryURL?: string
 }
-export const parseMetrics = (
+export const parseJson = (
   filePath: string,
   owner: string,
-  repository: string,
-): OtlpMetric[] => {
+  repository: string
+): any => {
   const otlpMetrics: OtlpMetric[] = []
 
   const fileData = readJsonFile(filePath)
+
   if (!('Results' in fileData)) {
     throw new Error('No results found in the trivy output')
   }
@@ -41,7 +42,7 @@ export const parseMetrics = (
     // Populate extract with the values from the result
     Object.keys(extract).forEach(key => {
       if (key in result) {
-        ; (extract as any)[key] = result[key]
+        ;(extract as any)[key] = result[key]
       }
     })
 
@@ -65,6 +66,90 @@ export const parseMetrics = (
     otlpMetrics.push(otlpMetric)
   })
   return otlpMetrics
+}
+
+export const parseSarif = (
+  filePath: string,
+  owner: string,
+  repository: string
+): any => {
+  const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/
+
+  const otlpMetrics: OtlpMetric[] = []
+
+  const fileData = readJsonFile(filePath)
+
+  if (!('runs' in fileData)) {
+    throw new Error('No runs found in the sarif output')
+  }
+  if (!('results' in fileData['runs'][0])) {
+    throw new Error('No results found in the sarif output')
+  }
+
+  const results = fileData['runs'][0]['results']
+
+  const extract = {
+    'Package:': '',
+    'Installed Version:': '',
+    Vulnerability: '',
+    'Severity:': '',
+    'Fixed Version:': '',
+    'Link:': ''
+  }
+  results.forEach((result: any) => {
+    const id = result['ruleId']
+    let message = result['message']['text']
+    message = message.split('\n')
+
+    message.forEach((line: string) => {
+      for (const key in extract) {
+        const t = line.split(key)
+        if (t.length === 2) (extract as any)[key] = t[1].trim()
+      }
+    })
+
+    let link = extract['Link:']
+    const match = link.match(linkRegex)
+    if (match && match.length === 3) {
+      link = match[2]
+    }
+
+    const otlpMetric: OtlpMetric = {
+      name: 'trivy.detected',
+      description: 'the vulnerability detected',
+      unit: 'vulnerability',
+      labels: {
+        severity: extract['Severity:'] || '',
+        owner: owner,
+        repository: repository,
+        id: id || '',
+        package: extract['Package:'] || '',
+        installed_version: extract['Installed Version:'] || '',
+        fixed_version: extract['Fixed Version:'] || '',
+        link: link || ''
+      },
+      value: 1
+    }
+
+    otlpMetrics.push(otlpMetric)
+  })
+
+  return otlpMetrics
+}
+
+export const parseMetrics = (
+  format: string,
+  filePath: string,
+  owner: string,
+  repository: string
+): OtlpMetric[] => {
+  if (format === 'json') {
+    return parseJson(filePath, owner, repository)
+  } else if (format === 'sarif') {
+    return parseSarif(filePath, owner, repository)
+  } else {
+    throw new Error('Invalid format')
+  }
 }
 
 // Function to load metrics from a file

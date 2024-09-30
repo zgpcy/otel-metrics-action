@@ -70,3 +70,4 @@ jobs:
           serviceNameAttr: ci-action-trivy
           serviceVersionAttr: 1.0.0
           trivyOutputFile: otel-metrics.json
+          trivyFormat: sarif

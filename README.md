@@ -1,12 +1,12 @@
-# OTEL Trivy action 
+# OTEL Trivy action
 
 [![Continuous Integration](https://github.com/zgpcy/otel-metrics-action/actions/workflows/ci.yml/badge.svg)](https://github.com/zgpcy/otel-metrics-action/actions/workflows/ci.yml)
 [![Lint Codebase](https://github.com/zgpcy/otel-metrics-action/actions/workflows/linter.yml/badge.svg)](https://github.com/zgpcy/otel-metrics-action/actions/workflows/linter.yml)
 [![Check Transpiled JavaScript](https://github.com/zgpcy/otel-metrics-action/actions/workflows/check-dist.yml/badge.svg)](https://github.com/zgpcy/otel-metrics-action/actions/workflows/check-dist.yml)
 [![Coverage](./badges/coverage.svg)](./badges/coverage.svg)
 
-This action reads the trivy json output and sends vulnerability metrics to an Opentelemtry collector
-
+This action reads the trivy json output and sends vulnerability metrics to an
+Opentelemtry collector
 
 ## Usage
 

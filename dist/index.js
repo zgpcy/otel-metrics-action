@@ -59393,17 +59393,33 @@ const run = async () => {
     const endpoint = core.getInput('endpoint');
     const headers = core.getInput('headers');
     const metricNamespace = core.getInput('metricNamespace') || process.env.OTLP_METRIC_NAMESPACE || '';
-    const repositoryName = core.getInput('repositoryName') || process.env.OTLP_REPOSITORY || '';
+    const githubRepository = core.getInput('githubRepository') || process.env.GITHUB_REPOSITORY || '';
     const otlpServiceNameAttr = core.getInput('serviceNameAttr') || process.env.OTLP_SERVICE_NAME_ATTR || '';
     const otlpServiceVersionAttr = core.getInput('serviceVersionAttr') ||
         process.env.OTLP_SERVICE_VERSION_ATTR ||
         '';
     const trivyOutputFile = core.getInput('trivyOutputFile');
+    const trivyFormat = core.getInput('trivyFormat');
     core.debug(`Using OTLP endpoint: ${endpoint}`);
     core.debug(`Using OTLP headers: ${headers}`);
     core.debug(`Using OTLP namespace: ${metricNamespace}`);
     core.debug(`Using OTLP service name: ${otlpServiceNameAttr}`);
     core.debug(`Using OTLP service version: ${otlpServiceNameAttr}`);
+    core.debug(`Using trivy output file: ${trivyOutputFile}`);
+    core.debug(`Using trivy format: ${trivyFormat}`);
+    core.debug(`Using repository name: ${githubRepository}`);
+    let repositoryOwner, repositoryName = '';
+    if (githubRepository.includes('/')) {
+        const split = githubRepository.split('/');
+        if (split.length !== 2) {
+            throw new Error('Invalid repository format');
+        }
+        repositoryOwner = split[0];
+        repositoryName = split[1];
+    }
+    else {
+        throw new Error('Repository owner is missing');
+    }
     //const octokit = github.getOctokit(ghToken)
     (0, otlp_1.initializeOTLP)({
         endpoint: endpoint,
@@ -59414,7 +59430,7 @@ const run = async () => {
     });
     // Load metrics from the file
     try {
-        const metrics = (0, trivy_1.parseMetrics)(trivyOutputFile, repositoryName);
+        const metrics = (0, trivy_1.parseMetrics)(trivyFormat, trivyOutputFile, repositoryOwner, repositoryName);
         core.info('Metrics to be sent:' + metrics);
         await (0, otlp_1.sendMetrics)(metrics);
         core.info('Metrics sent successfully');
@@ -59495,7 +59511,7 @@ const initializeOTLP = (config) => {
 };
 exports.initializeOTLP = initializeOTLP;
 const sendMetrics = async (metrics) => {
-    core.info('Sending metrics to OTLP');
+    core.debug('Sending metrics to OTLP');
     metrics.forEach(data => {
         const m = meter.createGauge(`${otlpConfig.metricNamespace}.${data.name}`, {
             description: data.description,
@@ -59540,13 +59556,16 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.readJsonFile = exports.parseMetrics = void 0;
+exports.readJsonFile = exports.parseMetrics = exports.parseSarif = exports.parseJson = void 0;
 const path = __importStar(__nccwpck_require__(1017));
 const core = __importStar(__nccwpck_require__(2186));
 const fs = __importStar(__nccwpck_require__(7147));
-const parseMetrics = (filePath, repository) => {
+const parseJson = (filePath, owner, repository) => {
     const otlpMetrics = [];
     const fileData = (0, exports.readJsonFile)(filePath);
+    if (!('Results' in fileData)) {
+        throw new Error('No results found in the trivy output');
+    }
     const results = fileData['Results'][0];
     if (!('Vulnerabilities' in results)) {
         return otlpMetrics;
@@ -59574,6 +59593,7 @@ const parseMetrics = (filePath, repository) => {
             unit: 'vulnerability',
             labels: {
                 severity: extract.Severity || '',
+                owner: owner,
                 repository: repository,
                 id: extract.VulnerabilityID || '',
                 package: extract.PkgName || '',
@@ -59586,6 +59606,74 @@ const parseMetrics = (filePath, repository) => {
         otlpMetrics.push(otlpMetric);
     });
     return otlpMetrics;
+};
+exports.parseJson = parseJson;
+const parseSarif = (filePath, owner, repository) => {
+    const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/;
+    const otlpMetrics = [];
+    const fileData = (0, exports.readJsonFile)(filePath);
+    if (!('runs' in fileData)) {
+        throw new Error('No runs found in the sarif output');
+    }
+    if (!('results' in fileData['runs'][0])) {
+        throw new Error('No results found in the sarif output');
+    }
+    const results = fileData['runs'][0]['results'];
+    const extract = {
+        'Package:': '',
+        'Installed Version:': '',
+        Vulnerability: '',
+        'Severity:': '',
+        'Fixed Version:': '',
+        'Link:': ''
+    };
+    results.forEach((result) => {
+        const id = result['ruleId'];
+        let message = result['message']['text'];
+        message = message.split('\n');
+        message.forEach((line) => {
+            for (const key in extract) {
+                const t = line.split(key);
+                if (t.length === 2)
+                    extract[key] = t[1].trim();
+            }
+        });
+        let link = extract['Link:'];
+        const match = link.match(linkRegex);
+        if (match && match.length === 3) {
+            link = match[2];
+        }
+        const otlpMetric = {
+            name: 'trivy.detected',
+            description: 'the vulnerability detected',
+            unit: 'vulnerability',
+            labels: {
+                severity: extract['Severity:'] || '',
+                owner: owner,
+                repository: repository,
+                id: id || '',
+                package: extract['Package:'] || '',
+                installed_version: extract['Installed Version:'] || '',
+                fixed_version: extract['Fixed Version:'] || '',
+                link: link || ''
+            },
+            value: 1
+        };
+        otlpMetrics.push(otlpMetric);
+    });
+    return otlpMetrics;
+};
+exports.parseSarif = parseSarif;
+const parseMetrics = (format, filePath, owner, repository) => {
+    if (format === 'json') {
+        return (0, exports.parseJson)(filePath, owner, repository);
+    }
+    else if (format === 'sarif') {
+        return (0, exports.parseSarif)(filePath, owner, repository);
+    }
+    else {
+        throw new Error('Invalid format');
+    }
 };
 exports.parseMetrics = parseMetrics;
 // Function to load metrics from a file

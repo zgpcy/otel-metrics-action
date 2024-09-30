@@ -34,6 +34,10 @@ inputs:
   trivyOutputFile:
     description: The path to load trivy output
     required: true
+  trivyFormat:
+    description: The format of trivy output
+    default: json
+    required: false
 
 runs:
   using: node20

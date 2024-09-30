@@ -19,6 +19,7 @@ export const run = async () => {
     process.env.OTLP_SERVICE_VERSION_ATTR ||
     ''
   const trivyOutputFile: string = core.getInput('trivyOutputFile')
+  const trivyFormat: string = core.getInput('trivyFormat')
 
   core.debug(`Using OTLP endpoint: ${endpoint}`)
   core.debug(`Using OTLP headers: ${headers}`)
@@ -26,9 +27,11 @@ export const run = async () => {
   core.debug(`Using OTLP service name: ${otlpServiceNameAttr}`)
   core.debug(`Using OTLP service version: ${otlpServiceNameAttr}`)
   core.debug(`Using trivy output file: ${trivyOutputFile}`)
+  core.debug(`Using trivy format: ${trivyFormat}`)
   core.debug(`Using repository name: ${githubRepository}`)
 
-  let repositoryOwner, repositoryName = ''
+  let repositoryOwner,
+    repositoryName = ''
   if (githubRepository.includes('/')) {
     const split = githubRepository.split('/')
     if (split.length !== 2) {
@@ -52,7 +55,12 @@ export const run = async () => {
   // Load metrics from the file
 
   try {
-    const metrics = parseMetrics(trivyOutputFile, repositoryOwner, repositoryName)
+    const metrics = parseMetrics(
+      trivyFormat,
+      trivyOutputFile,
+      repositoryOwner,
+      repositoryName
+    )
     core.info('Metrics to be sent:' + metrics)
     await sendMetrics(metrics)
     core.info('Metrics sent successfully')
