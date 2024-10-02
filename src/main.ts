@@ -20,6 +20,7 @@ export const run = async () => {
     ''
   const trivyOutputFile: string = core.getInput('trivyOutputFile')
   const trivyFormat: string = core.getInput('trivyFormat')
+  const trivyOutputsDir: string = core.getInput('trivyOutputsDir')
 
   core.debug(`Using OTLP endpoint: ${endpoint}`)
   core.debug(`Using OTLP headers: ${headers}`)
@@ -27,6 +28,7 @@ export const run = async () => {
   core.debug(`Using OTLP service name: ${otlpServiceNameAttr}`)
   core.debug(`Using OTLP service version: ${otlpServiceNameAttr}`)
   core.debug(`Using trivy output file: ${trivyOutputFile}`)
+  core.debug(`Using trivy outputs dir: ${trivyOutputsDir}`)
   core.debug(`Using trivy format: ${trivyFormat}`)
   core.debug(`Using repository name: ${githubRepository}`)
 
@@ -52,20 +54,40 @@ export const run = async () => {
     serviceVersion: otlpServiceVersionAttr
   })
 
-  // Load metrics from the file
-
-  try {
-    const metrics = parseMetrics(
-      trivyFormat,
-      trivyOutputFile,
-      repositoryOwner,
-      repositoryName
-    )
-    core.info('Metrics to be sent:' + metrics)
-    await sendMetrics(metrics)
-    core.info('Metrics sent successfully')
-  } catch (error: any) {
-    core.setFailed(`Failed to send metrics: ${error.message}`)
-    throw error
+  if (trivyOutputsDir === '') {
+    try {
+      const metrics = parseMetrics(
+        trivyFormat,
+        trivyOutputFile,
+        repositoryOwner,
+        repositoryName
+      )
+      core.info('Metrics to be sent:' + metrics)
+      await sendMetrics(metrics)
+      core.info('Metrics sent successfully')
+    } catch (error: any) {
+      core.setFailed(`Failed to send metrics: ${error.message}`)
+      throw error
+    }
+  } else {
+    const fs = require('fs')
+    const files = fs.readdirSync(trivyOutputsDir)
+    for (const file of files) {
+      //remove file extension
+      const fileParts = file.split('.')
+      repositoryName = fileParts[0]
+      const m = parseMetrics(
+        trivyFormat,
+        trivyOutputsDir + file,
+        repositoryOwner,
+        repositoryName
+      )
+      try {
+        await sendMetrics(m)
+      } catch (error: any) {
+        core.setFailed(`Failed to send metrics: ${error.message}`)
+        throw error
+      }
+    }
   }
 }

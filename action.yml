@@ -33,7 +33,12 @@ inputs:
     required: false
   trivyOutputFile:
     description: The path to load trivy output
-    required: true
+    required: false
+  trivyOutputsDir:
+    description:
+      Send multiple trivy outputs. When specified, trivyOutputFile is ignored.
+      Repository name will be replaced by file name.
+    required: false
   trivyFormat:
     description: The format of trivy output
     default: json

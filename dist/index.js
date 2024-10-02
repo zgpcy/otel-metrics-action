@@ -59400,12 +59400,14 @@ const run = async () => {
         '';
     const trivyOutputFile = core.getInput('trivyOutputFile');
     const trivyFormat = core.getInput('trivyFormat');
+    const trivyOutputsDir = core.getInput('trivyOutputsDir');
     core.debug(`Using OTLP endpoint: ${endpoint}`);
     core.debug(`Using OTLP headers: ${headers}`);
     core.debug(`Using OTLP namespace: ${metricNamespace}`);
     core.debug(`Using OTLP service name: ${otlpServiceNameAttr}`);
     core.debug(`Using OTLP service version: ${otlpServiceNameAttr}`);
     core.debug(`Using trivy output file: ${trivyOutputFile}`);
+    core.debug(`Using trivy outputs dir: ${trivyOutputsDir}`);
     core.debug(`Using trivy format: ${trivyFormat}`);
     core.debug(`Using repository name: ${githubRepository}`);
     let repositoryOwner, repositoryName = '';
@@ -59428,16 +59430,34 @@ const run = async () => {
         serviceName: otlpServiceNameAttr,
         serviceVersion: otlpServiceVersionAttr
     });
-    // Load metrics from the file
-    try {
-        const metrics = (0, trivy_1.parseMetrics)(trivyFormat, trivyOutputFile, repositoryOwner, repositoryName);
-        core.info('Metrics to be sent:' + metrics);
-        await (0, otlp_1.sendMetrics)(metrics);
-        core.info('Metrics sent successfully');
+    if (trivyOutputsDir === '') {
+        try {
+            const metrics = (0, trivy_1.parseMetrics)(trivyFormat, trivyOutputFile, repositoryOwner, repositoryName);
+            core.info('Metrics to be sent:' + metrics);
+            await (0, otlp_1.sendMetrics)(metrics);
+            core.info('Metrics sent successfully');
+        }
+        catch (error) {
+            core.setFailed(`Failed to send metrics: ${error.message}`);
+            throw error;
+        }
     }
-    catch (error) {
-        core.setFailed(`Failed to send metrics: ${error.message}`);
-        throw error;
+    else {
+        const fs = __nccwpck_require__(7147);
+        const files = fs.readdirSync(trivyOutputsDir);
+        for (const file of files) {
+            //remove file extension
+            const fileParts = file.split('.');
+            repositoryName = fileParts[0];
+            const m = (0, trivy_1.parseMetrics)(trivyFormat, trivyOutputsDir + file, repositoryOwner, repositoryName);
+            try {
+                await (0, otlp_1.sendMetrics)(m);
+            }
+            catch (error) {
+                core.setFailed(`Failed to send metrics: ${error.message}`);
+                throw error;
+            }
+        }
     }
 };
 exports.run = run;
